@@ -6,7 +6,7 @@
 An enhanced 3D file viewer extension for MediaWiki, designed to bring high-fidelity 3D models and animations to Wikipedia and beyond. This project is a major evolution of the original [Extension:3D](https://www.mediawiki.org/wiki/Extension:3D).
 
 
-![Wikipedia 3D Viewer Demo](https://github.com/gabriel-lucas/wikipedia-3d-viewer/releases/download/v1.0.0/Wikipedia%203D%20Viewer.webm)
+![Wikipedia 3D Viewer Demo](https://github.com/gabriel-lucas/wikipedia-3d-viewer/releases/download/v1.0.0/Wikipedia.3D.Viewer.webm)
 
 > [!NOTE]
 > *If the video does not display, you can download it directly from the [latest release](https://github.com/gabriel-lucas/wikipedia-3d-viewer/releases).*
