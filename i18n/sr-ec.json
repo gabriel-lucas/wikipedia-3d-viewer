@@ -1,0 +1,17 @@
+{
+	"@metadata": {
+		"authors": [
+			"Aca",
+			"Acamicamacaraca",
+			"BadDog",
+			"Obsuser",
+			"Сербијана"
+		]
+	},
+	"3d": "3D",
+	"3d-desc": "Пружа подршку за 3D формате датотека",
+	"3d-badge-text": "3D",
+	"3d-patent": "Дозвола патента:",
+	"3d-nopatent": "Ништа није изабрано",
+	"3d-thumb-placeholder": "Учитавање минијатуре…"
+}

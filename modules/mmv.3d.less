@@ -1,0 +1,23 @@
+.mw-mmv-image {
+	canvas {
+		cursor: move;
+		/* stylelint-disable plugin/no-unsupported-browser-features */
+		cursor: grab;
+		cursor: -moz-grab;
+		cursor: -webkit-grab;
+		/* stylelint-enable plugin/no-unsupported-browser-features */
+	}
+
+	canvas.mw-mmv-canvas-mousedown {
+		/* stylelint-disable plugin/no-unsupported-browser-features */
+		cursor: grabbing;
+		cursor: -moz-grabbing;
+		cursor: -webkit-grabbing;
+		/* stylelint-enable plugin/no-unsupported-browser-features */
+	}
+}
+
+/* Ensure the container is positioned for toolbar overlays */
+.mw-mmv-image {
+	position: relative;
+}

@@ -1,0 +1,286 @@
+/* ===================================================================
+ * 3D Viewer — Main Toolbar & Animation Toolbar Styles
+ * =================================================================== */
+
+/* --- Main Toolbar Container --- */
+
+.mw-3d-toolbar {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	display: flex;
+	gap: 6px;
+	opacity: 0;
+	transition: opacity 0.35s ease;
+	z-index: 100;
+	pointer-events: none;
+}
+
+.mw-3d-toolbar-visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* --- Toolbar Buttons --- */
+
+.mw-3d-toolbar-btn {
+	width: 36px;
+	height: 36px;
+	border: none;
+	border-radius: 6px;
+	background: rgba(30, 30, 30, 0.75);
+	color: #e0e0e0;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+	padding: 0;
+	line-height: 1;
+	backdrop-filter: blur(6px);
+}
+
+.mw-3d-toolbar-btn:hover {
+	background: rgba(50, 50, 50, 0.9);
+	color: #fff;
+	transform: scale(1.08);
+}
+
+.mw-3d-toolbar-btn:active {
+	transform: scale(0.95);
+}
+
+.mw-3d-toolbar-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.mw-3d-toolbar-btn-active {
+	background: rgba(51, 102, 204, 0.8);
+	color: #fff;
+}
+
+.mw-3d-toolbar-btn svg {
+	display: block;
+}
+
+/* --- Settings Panel --- */
+
+.mw-3d-settings-panel {
+	position: absolute;
+	top: 54px;
+	right: 12px;
+	width: 220px;
+	background: rgba(24, 24, 24, 0.92);
+	backdrop-filter: blur(10px);
+	border-radius: 8px;
+	padding: 8px 0;
+	z-index: 101;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.mw-3d-settings-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 14px;
+	color: #d0d0d0;
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 13px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+	user-select: none;
+}
+
+.mw-3d-settings-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.mw-3d-settings-icon {
+	width: 22px;
+	text-align: center;
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 15px;
+	flex-shrink: 0;
+}
+
+.mw-3d-settings-item label {
+	flex: 1;
+	cursor: pointer;
+}
+
+.mw-3d-settings-item input[type='checkbox'] {
+	width: 16px;
+	height: 16px;
+	accent-color: #36c;
+	cursor: pointer;
+}
+
+/* --- Animation Progress Bar --- */
+
+.mw-3d-anim-progress-wrap {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: rgba(255, 255, 255, 0.1);
+	z-index: 111;
+	cursor: pointer;
+	transition: height 0.15s;
+}
+
+.mw-3d-anim-progress-wrap:hover {
+	height: 6px;
+}
+
+.mw-3d-anim-progress-fill {
+	height: 100%;
+	width: 0%;
+	background: linear-gradient(90deg, #4a9eff, #6af);
+	border-radius: 0 2px 2px 0;
+	transition: width 0.05s linear;
+	position: relative;
+}
+
+.mw-3d-anim-progress-fill::after {
+	content: '';
+	position: absolute;
+	right: -5px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transition: opacity 0.15s;
+}
+
+.mw-3d-anim-progress-wrap:hover .mw-3d-anim-progress-fill::after {
+	opacity: 1;
+}
+
+/* --- Animation Toolbar --- */
+
+.mw-3d-animation-toolbar {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: center;
+	padding: 10px 16px;
+	padding-top: 14px;
+	background: rgba(14, 14, 14, 0.95);
+	backdrop-filter: blur(8px);
+	z-index: 110;
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 13px;
+	color: #eee;
+	gap: 0;
+}
+
+.mw-3d-anim-group {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.mw-3d-anim-group-left {
+	flex: 0 0 auto;
+}
+
+.mw-3d-anim-group-center {
+	flex: 1 1 auto;
+	justify-content: center;
+}
+
+.mw-3d-anim-group-right {
+	flex: 0 0 auto;
+}
+
+.mw-3d-anim-btn {
+	width: 32px;
+	height: 32px;
+	border: none;
+	border-radius: 5px;
+	background: rgba(255, 255, 255, 0.06);
+	color: #ccc;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	transition: background 0.15s, color 0.15s;
+}
+
+.mw-3d-anim-btn:hover {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+}
+
+.mw-3d-anim-btn:active {
+	transform: scale(0.92);
+}
+
+.mw-3d-anim-btn.active {
+	color: #6af;
+	background: rgba(102, 170, 255, 0.15);
+}
+
+.mw-3d-anim-btn svg {
+	display: block;
+}
+
+.mw-3d-anim-time {
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 13px;
+	color: #fff;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	min-width: 100px;
+	letter-spacing: 0.5px;
+}
+
+.mw-3d-anim-speed-wrap {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	padding: 3px 8px;
+	border-radius: 4px;
+	transition: background 0.15s;
+	user-select: none;
+	color: #bbb;
+}
+
+.mw-3d-anim-speed-wrap:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+}
+
+.mw-3d-anim-speed-wrap svg {
+	display: block;
+	flex-shrink: 0;
+}
+
+.mw-3d-anim-speed {
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.mw-3d-anim-track-select {
+	background: rgba(40, 40, 40, 0.9);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 5px;
+	color: #eee;
+	/* stylelint-disable-next-line declaration-property-unit-disallowed-list */
+	font-size: 13px;
+	padding: 4px 10px;
+	max-width: 200px;
+	cursor: pointer;
+}

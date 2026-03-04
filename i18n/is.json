@@ -1,0 +1,12 @@
+{
+	"@metadata": {
+		"authors": [
+			"Stefán Örvar Sigmundsson",
+			"Sveinn í Felli"
+		]
+	},
+	"3d-desc": "Veitir stuðning fyrir 3D-skráarsnið",
+	"3d-patent": "Heimildir einkaleyfis:",
+	"3d-nopatent": "Ekkert valið",
+	"3d-thumb-placeholder": "Hleð inn smámynd..."
+}

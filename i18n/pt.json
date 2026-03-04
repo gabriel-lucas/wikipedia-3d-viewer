@@ -1,0 +1,13 @@
+{
+	"@metadata": {
+		"authors": [
+			"Athena in Wonderland",
+			"Fúlvio",
+			"Hamilton Abreu"
+		]
+	},
+	"3d-desc": "Fornece suporte para formatos de ficheiros 3D",
+	"3d-patent": "Permissões da patente:",
+	"3d-nopatent": "Não foi selecionada nenhuma",
+	"3d-thumb-placeholder": "A carregar miniatura..."
+}

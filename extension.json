@@ -1,0 +1,127 @@
+{
+	"name": "3D",
+	"version": "0.0.1",
+	"author": [
+		"Gilles Dubuc"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:3D",
+	"namemsg": "3d",
+	"descriptionmsg": "3d-desc",
+	"license-name": "GPL-2.0-or-later",
+	"requires": {
+		"MediaWiki": ">= 1.45"
+	},
+	"type": "media",
+	"manifest_version": 2,
+	"MessagesDirs": {
+		"3D": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"ext.3d": {
+			"packageFiles": [
+				"ext.3d.js"
+			],
+			"styles": [
+				"ext.3d.less"
+			],
+			"messages": [
+				"3d-badge-text",
+				"3d-thumb-placeholder"
+			],
+			"dependencies": [
+				"jquery.spinner"
+			]
+		},
+		"ext.3d.styles": {
+			"styles": [
+				"ext.3d.less"
+			]
+		},
+		"mmv.3d": {
+			"packageFiles": [
+				"mmv.3d.js",
+				"lib/three/three.js"
+			],
+			"styles": [
+				"mmv.3d.less",
+				"ext.3d.toolbar.less"
+			],
+			"dependencies": [
+				"mmv",
+				"ext.3d",
+				"mediawiki.util"
+			]
+		},
+		"mmv.3d.head": {
+			"packageFiles": [
+				"mmv.3d.head.js"
+			],
+			"styles": [
+				"mmv.3d.head.less"
+			],
+			"messages": [
+				"view",
+				"download"
+			],
+			"dependencies": [
+				"ext.3d",
+				"oojs-ui-core",
+				"oojs-ui.styles.icons-accessibility",
+				"oojs-ui.styles.icons-content"
+			]
+		},
+		"ext.3d.special.upload": {
+			"packageFiles": [
+				"ext.3d.special.upload.js"
+			],
+			"dependencies": [
+				"ext.3d.special.upload.styles",
+				"mediawiki.special.upload"
+			]
+		},
+		"ext.3d.special.upload.styles": {
+			"styles": [
+				"ext.3d.special.upload.less"
+			]
+		}
+	},
+	"ForeignResourcesDir": "modules/lib",
+	"ResourceFileModulePaths": {
+		"localBasePath": "modules",
+		"remoteExtPath": "3D/modules"
+	},
+	"HookHandlers": {
+		"main": {
+			"class": "MediaWiki\\Extension\\ThreeD\\Hooks",
+			"services": [
+				"RepoGroup"
+			]
+		}
+	},
+	"Hooks": {
+		"BeforePageDisplay": "main",
+		"UploadFormInitDescriptor": "main",
+		"UploadForm:getInitialPageText": "main"
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\ThreeD\\": "src/"
+	},
+	"MediaHandlers": {
+		"application/sla": "MediaWiki\\Extension\\ThreeD\\ThreeDHandler",
+		"model/gltf-binary": "MediaWiki\\Extension\\ThreeD\\ThreeDHandler",
+		"model/gltf+json": "MediaWiki\\Extension\\ThreeD\\ThreeDHandler"
+	},
+	"config": {
+		"Max3d2pngMemory": {
+			"value": "10000000"
+		},
+		"AjaxPatentPreview": {
+			"value": true
+		},
+		"3dProcessEnviron": {
+			"value": []
+		}
+	}
+}

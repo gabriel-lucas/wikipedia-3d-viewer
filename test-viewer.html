@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Viewer — Standalone Test Harness</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #111;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 10px 20px;
+            background: rgba(20, 20, 20, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+            z-index: 200;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .header button,
+        .header label {
+            background: rgba(50, 50, 50, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d0d0d0;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .header button:hover,
+        .header label:hover {
+            background: rgba(70, 70, 70, 0.9);
+            color: #fff;
+        }
+
+        .header input[type="file"] {
+            display: none;
+        }
+
+        .header .sample-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .header .status-info {
+            margin-left: auto;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .viewer-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viewer-container canvas {
+            display: block;
+            cursor: grab;
+        }
+
+        .viewer-container canvas:active {
+            cursor: grabbing;
+        }
+
+        .drop-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 150;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .drop-overlay.active {
+            opacity: 1;
+        }
+
+        .drop-overlay .icon {
+            font-size: 48px;
+        }
+
+        .drop-overlay .text {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .welcome {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .welcome .icon {
+            font-size: 64px;
+            opacity: 0.3;
+        }
+
+        .welcome .text {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .welcome .hint {
+            font-size: 13px;
+            color: #444;
+        }
+
+        /* --- Main Toolbar --- */
+        .mw-3d-toolbar {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .mw-3d-toolbar-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mw-3d-toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(30, 30, 30, 0.75);
+            color: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+            padding: 0;
+            line-height: 1;
+            backdrop-filter: blur(6px);
+        }
+
+        .mw-3d-toolbar-btn:hover {
+            background: rgba(50, 50, 50, 0.9);
+            color: #fff;
+            transform: scale(1.08);
+        }
+
+        .mw-3d-toolbar-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mw-3d-toolbar-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mw-3d-toolbar-btn-active {
+            background: rgba(51, 102, 204, 0.8);
+            color: #fff;
+        }
+
+        .mw-3d-toolbar-btn svg {
+            display: block;
+        }
+
+        /* --- Settings Panel --- */
+        .mw-3d-settings-panel {
+            position: absolute;
+            top: 54px;
+            right: 12px;
+            width: 220px;
+            background: rgba(24, 24, 24, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 8px 0;
+            z-index: 101;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .mw-3d-settings-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            color: #d0d0d0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+
+        .mw-3d-settings-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mw-3d-settings-icon {
+            width: 22px;
+            text-align: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .mw-3d-settings-item label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .mw-3d-settings-item input[type='checkbox'] {
+            width: 16px;
+            height: 16px;
+            accent-color: #36c;
+            cursor: pointer;
+        }
+
+        /* --- Animation Progress Bar --- */
+        .mw-3d-anim-progress-wrap {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 111;
+            cursor: pointer;
+            transition: height 0.15s;
+        }
+
+        .mw-3d-anim-progress-wrap:hover {
+            height: 6px;
+        }
+
+        .mw-3d-anim-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4a9eff, #6af);
+            border-radius: 0 2px 2px 0;
+            transition: width 0.05s linear;
+            position: relative;
+        }
+
+        .mw-3d-anim-progress-fill::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .mw-3d-anim-progress-wrap:hover .mw-3d-anim-progress-fill::after {
+            opacity: 1;
+        }
+
+        /* --- Animation Toolbar --- */
+        .mw-3d-animation-toolbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            padding-top: 14px;
+            background: rgba(14, 14, 14, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 110;
+            font-size: 13px;
+            color: #eee;
+            gap: 0;
+        }
+
+        .mw-3d-anim-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mw-3d-anim-group-left {
+            flex: 0 0 auto;
+        }
+
+        .mw-3d-anim-group-center {
+            flex: 1 1 auto;
+            justify-content: center;
+        }
+
+        .mw-3d-anim-group-right {
+            flex: 0 0 auto;
+        }
+
+        .mw-3d-anim-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .mw-3d-anim-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .mw-3d-anim-btn:active {
+            transform: scale(0.92);
+        }
+
+        .mw-3d-anim-btn.active {
+            color: #6af;
+            background: rgba(102, 170, 255, 0.15);
+        }
+
+        .mw-3d-anim-btn svg {
+            display: block;
+        }
+
+        .mw-3d-anim-time {
+            font-size: 13px;
+            color: #fff;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            min-width: 100px;
+            letter-spacing: 0.5px;
+        }
+
+        .mw-3d-anim-speed-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 4px;
+            transition: background 0.15s;
+            user-select: none;
+            color: #bbb;
+        }
+
+        .mw-3d-anim-speed-wrap:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .mw-3d-anim-speed-wrap svg {
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .mw-3d-anim-speed {
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .mw-3d-anim-track-select {
+            background: rgba(40, 40, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            color: #eee;
+            font-size: 13px;
+            padding: 4px 10px;
+            max-width: 200px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🧊 3D Viewer Test Harness</h1>
+        <div class="controls">
+            <label for="file-input">📂 Open File</label>
+            <input type="file" id="file-input" accept=".stl,.gltf,.glb">
+        </div>
+        <div class="sample-btns">
+            <button onclick="loadSampleCube()">Load Sample Cube</button>
+        </div>
+        <span id="status-info" class="status-info"></span>
+    </div>
+    <div id="viewer-container" class="viewer-container">
+        <div id="welcome" class="welcome">
+            <div class="icon">🧊</div>
+            <div class="text">Drag & drop a 3D file here</div>
+            <div class="hint">Supported formats: STL, GLTF, GLB</div>
+        </div>
+        <div id="drop-overlay" class="drop-overlay">
+            <div class="icon">📥</div>
+            <div class="text">Drop to load</div>
+        </div>
+    </div>
+
+    <script src="modules/lib/three/three.js"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            const container = document.getElementById('viewer-container');
+            const welcome = document.getElementById('welcome');
+            const statusInfo = document.getElementById('status-info');
+            const dropOverlay = document.getElementById('drop-overlay');
+            const fileInput = document.getElementById('file-input');
+
+            let renderer, scene, camera, controls, mixer, animations = [], currentAction, isPlaying = false;
+            let initialCameraPosition, initialCameraTarget;
+            let raycaster, mouse;
+            let toolbar;
+            let initialized = false;
+            let lastTime = 0;
+            let isGLTF = false;
+
+            // Camera transition state
+            let camTransition = null; // { from, to, fromTarget, toTarget, start, duration }
+
+            // Animation playback state
+            let currentTrackIndex = 0;
+            let repeatMode = 'all'; // 'single', 'all', 'none'
+            let playbackSpeed = 1;
+            const SPEEDS = [0.2, 0.5, 1, 2];
+            let speedIndex = 2; // default x1
+
+            // ----------------------------------------------------------------
+            // Init
+            // ----------------------------------------------------------------
+            function initViewer() {
+                if (initialized) {
+                    // Clean up previous scene children (keep camera)
+                    const toRemove = [];
+                    scene.traverse(c => { if (c !== scene && c !== camera && !camera.children.includes(c)) toRemove.push(c); });
+                    toRemove.forEach(c => { if (c.parent) c.parent.remove(c); });
+                    if (mixer) { mixer.stopAllAction(); mixer = null; }
+                    if (toolbar) { toolbar.destroy(); toolbar = null; }
+                    camTransition = null;
+                }
+
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                if (!initialized) {
+                    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+                    renderer.setClearColor(0x111111);
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.shadowMap.enabled = true;
+                    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                    renderer.toneMappingExposure = 1.0;
+
+                    camera = new THREE.PerspectiveCamera(45, width / height, 0.001, 500000);
+                    camera.up.set(0, 1, 0);
+
+                    // Subtle headlight — low intensity so it doesn't wash out PBR
+                    const headlight = new THREE.DirectionalLight(0xffffff, 1.0);
+                    headlight.position.set(0, 0, 1);
+                    camera.add(headlight);
+
+                    controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.08;
+                    controls.rotateSpeed = 1.0;
+                    controls.zoomSpeed = 1.2;
+                    controls.panSpeed = 0.8;
+                    controls.screenSpacePanning = true;
+                    controls.minDistance = 0.001;
+                    controls.maxDistance = 500000;
+                    controls.mouseButtons = {
+                        LEFT: THREE.MOUSE.ROTATE,
+                        MIDDLE: THREE.MOUSE.PAN,
+                        RIGHT: THREE.MOUSE.PAN
+                    };
+                    controls.touches = {
+                        ONE: THREE.TOUCH.ROTATE,
+                        TWO: THREE.TOUCH.DOLLY_PAN
+                    };
+
+                    raycaster = new THREE.Raycaster();
+                    mouse = new THREE.Vector2();
+
+                    setupEventHandlers();
+                    container.appendChild(renderer.domElement);
+                }
+
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                scene = new THREE.Scene();
+                scene.add(camera);
+
+                // Soft ambient fill
+                scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+                animations = [];
+                currentAction = null;
+                isPlaying = false;
+                currentTrackIndex = 0;
+                isGLTF = false;
+
+                if (!initialized) {
+                    lastTime = performance.now();
+                    animate();
+                    initialized = true;
+                }
+
+                welcome.style.display = 'none';
+            }
+
+            // ----------------------------------------------------------------
+            // Environment (PBR)
+            // ----------------------------------------------------------------
+            function setupEnvironment() {
+                const pmremGenerator = new THREE.PMREMGenerator(renderer);
+                const roomEnv = new THREE.RoomEnvironment();
+                scene.environment = pmremGenerator.fromScene(roomEnv, 0.04).texture;
+                scene.background = null; // keep dark bg
+                pmremGenerator.dispose();
+                roomEnv.dispose();
+            }
+
+            // ----------------------------------------------------------------
+            // Camera helpers
+            // ----------------------------------------------------------------
+            function computeFraming(object) {
+                const box = new THREE.Box3().setFromObject(object);
+                if (box.isEmpty()) return null;
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const fov = camera.fov * (Math.PI / 180);
+                const dist = (maxDim / 2) / Math.tan(fov / 2) * 1.6;
+                const pos = new THREE.Vector3(
+                    center.x + dist * 0.6,
+                    center.y + dist * 0.4,
+                    center.z + dist * 0.7
+                );
+                return { center, pos, dist, maxDim };
+            }
+
+            function startCameraTransition(toPos, toTarget, duration) {
+                camTransition = {
+                    fromPos: camera.position.clone(),
+                    toPos: toPos.clone(),
+                    fromTarget: controls.target.clone(),
+                    toTarget: toTarget.clone(),
+                    start: performance.now(),
+                    duration: duration || 1200
+                };
+            }
+
+            function updateCameraTransition() {
+                if (!camTransition) return;
+                const elapsed = performance.now() - camTransition.start;
+                let t = Math.min(elapsed / camTransition.duration, 1);
+                // Ease-out cubic
+                t = 1 - Math.pow(1 - t, 3);
+
+                camera.position.lerpVectors(camTransition.fromPos, camTransition.toPos, t);
+                controls.target.lerpVectors(camTransition.fromTarget, camTransition.toTarget, t);
+                controls.update();
+
+                if (t >= 1) camTransition = null;
+            }
+
+            function centerAndIntro(object) {
+                const framing = computeFraming(object);
+                if (!framing) return;
+
+                // Start camera far away
+                const farPos = framing.pos.clone().multiplyScalar(3);
+                camera.position.copy(farPos);
+                controls.target.copy(framing.center);
+                controls.update();
+
+                // Save the final state for reset
+                initialCameraPosition = framing.pos.clone();
+                initialCameraTarget = framing.center.clone();
+
+                // Animate in
+                startCameraTransition(framing.pos, framing.center, 1800);
+            }
+
+            function fitScene() {
+                const framing = computeFraming(scene);
+                if (!framing) return;
+                startCameraTransition(framing.pos, framing.center, 800);
+            }
+
+            function resetCamera() {
+                if (initialCameraPosition && initialCameraTarget) {
+                    startCameraTransition(initialCameraPosition, initialCameraTarget, 800);
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // Render / Animate
+            // ----------------------------------------------------------------
+            function render() {
+                if (scene && camera) renderer.render(scene, camera);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const now = performance.now();
+                const delta = (now - lastTime) / 1000;
+                lastTime = now;
+
+                if (mixer && isPlaying) {
+                    mixer.update(delta);
+                    if (toolbar) toolbar.updateAnimationProgress();
+                }
+
+                updateCameraTransition();
+                controls.update();
+                render();
+            }
+
+            // ----------------------------------------------------------------
+            // Event handlers
+            // ----------------------------------------------------------------
+            function setupEventHandlers() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' || e.keyCode === 32) { e.preventDefault(); resetCamera(); }
+                    if (e.key === 'Shift' && controls) controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+                });
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === 'Shift' && controls) controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+                });
+
+                let lastTapTime = 0;
+                container.addEventListener('dblclick', (e) => { e.preventDefault(); handleDoubleClick(e); });
+                container.addEventListener('touchend', (e) => {
+                    const now = Date.now();
+                    if (now - lastTapTime < 300) { e.preventDefault(); handleDoubleClick(e); }
+                    lastTapTime = now;
+                });
+
+                window.addEventListener('resize', () => {
+                    if (!renderer) return;
+                    const w = container.clientWidth, h = container.clientHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                });
+            }
+
+            function handleDoubleClick(e) {
+                if (!renderer || !scene) return;
+                const rect = renderer.domElement.getBoundingClientRect();
+                let cx, cy;
+                if (e.changedTouches) { cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY; }
+                else { cx = e.clientX; cy = e.clientY; }
+
+                mouse.x = ((cx - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((cy - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+
+                if (intersects.length > 0) {
+                    // Zoom to part: move camera 60% closer to hit point
+                    const hitPoint = intersects[0].point;
+                    const newTarget = hitPoint.clone();
+                    const dir = camera.position.clone().sub(hitPoint);
+                    const newPos = hitPoint.clone().add(dir.multiplyScalar(0.4));
+                    startCameraTransition(newPos, newTarget, 600);
+                    statusInfo.textContent = 'Zoomed to part';
+                } else {
+                    fitScene();
+                    statusInfo.textContent = 'Fitted scene to view';
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // File loading
+            // ----------------------------------------------------------------
+            function loadFile(file) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                const url = URL.createObjectURL(file);
+
+                initViewer();
+                statusInfo.textContent = 'Loading ' + file.name + '...';
+
+                switch (ext) {
+                    case 'gltf':
+                    case 'glb': {
+                        isGLTF = true;
+                        setupEnvironment();
+
+                        const gltfLoader = new THREE.GLTFLoader();
+
+                        // KTX2 support
+                        const ktx2Loader = new THREE.KTX2Loader();
+                        ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/libs/basis/');
+                        ktx2Loader.detectSupport(renderer);
+                        gltfLoader.setKTX2Loader(ktx2Loader);
+
+                        // Meshopt support
+                        gltfLoader.setMeshoptDecoder(THREE.MeshoptDecoder);
+
+                        gltfLoader.load(url, (gltf) => {
+                            const object = gltf.scene;
+                            animations = gltf.animations || [];
+
+                            object.traverse((child) => {
+                                if (child.isMesh) {
+                                    child.castShadow = true;
+                                    child.receiveShadow = true;
+                                }
+                            });
+
+                            scene.add(object);
+                            centerAndIntro(object);
+
+                            if (animations.length > 0) {
+                                mixer = new THREE.AnimationMixer(object);
+                                mixer.addEventListener('finished', onAnimationFinished);
+                                playAnimation(0);
+                            }
+
+                            toolbar = createToolbar();
+                            statusInfo.textContent = file.name + ' — ' +
+                                (animations.length > 0 ? animations.length + ' animation(s)' : 'Loaded');
+                            URL.revokeObjectURL(url);
+                        }, (progress) => {
+                            if (progress.total > 0)
+                                statusInfo.textContent = 'Loading... ' + Math.round((progress.loaded / progress.total) * 100) + '%';
+                        }, (error) => {
+                            statusInfo.textContent = 'Error: ' + (error.message || error);
+                            console.error(error);
+                            URL.revokeObjectURL(url);
+                        });
+                        break;
+                    }
+                    case 'stl': {
+                        isGLTF = false;
+                        const loader = new THREE.STLLoader();
+                        loader.load(url, (geometry) => {
+                            const vertexColors = geometry.hasAttribute('color');
+                            const material = new THREE.MeshStandardMaterial({
+                                color: 0xc8bdb5,
+                                metalness: 0.15,
+                                roughness: 0.65,
+                                flatShading: true,
+                                side: THREE.DoubleSide,
+                                vertexColors
+                            });
+                            const mesh = new THREE.Mesh(geometry, material);
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+
+                            // Add some lights for STL since there's no env map
+                            const dl1 = new THREE.DirectionalLight(0xffffff, 2);
+                            dl1.position.set(5, 10, 7);
+                            scene.add(dl1);
+                            const dl2 = new THREE.DirectionalLight(0x8888ff, 0.8);
+                            dl2.position.set(-5, -3, -5);
+                            scene.add(dl2);
+
+                            scene.add(mesh);
+                            centerAndIntro(mesh);
+
+                            toolbar = createToolbar();
+                            statusInfo.textContent = file.name + ' — STL model';
+                            URL.revokeObjectURL(url);
+                        }, (progress) => {
+                            if (progress.total > 0)
+                                statusInfo.textContent = 'Loading... ' + Math.round((progress.loaded / progress.total) * 100) + '%';
+                        }, (error) => {
+                            statusInfo.textContent = 'Error: ' + (error.message || error);
+                            console.error(error);
+                            URL.revokeObjectURL(url);
+                        });
+                        break;
+                    }
+                    default:
+                        statusInfo.textContent = 'Unsupported format: .' + ext;
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // Animation control
+            // ----------------------------------------------------------------
+            function playAnimation(index) {
+                if (!mixer || index < 0 || index >= animations.length) return;
+                if (currentAction) currentAction.stop();
+
+                currentTrackIndex = index;
+                const clip = animations[index];
+                currentAction = mixer.clipAction(clip);
+                currentAction.reset();
+                currentAction.clampWhenFinished = true;
+                // Set loop based on repeat mode
+                if (repeatMode === 'single') {
+                    currentAction.setLoop(THREE.LoopRepeat, Infinity);
+                } else {
+                    currentAction.setLoop(THREE.LoopOnce, 1);
+                }
+                currentAction.timeScale = playbackSpeed;
+                currentAction.play();
+                isPlaying = true;
+                if (toolbar) { toolbar.updatePlayState(true); toolbar.updateTrackUI(); }
+            }
+
+            function onAnimationFinished() {
+                if (repeatMode === 'single') return; // handled by LoopRepeat
+                if (repeatMode === 'all') {
+                    const next = (currentTrackIndex + 1) % animations.length;
+                    playAnimation(next);
+                } else if (repeatMode === 'none') {
+                    const next = currentTrackIndex + 1;
+                    if (next < animations.length) {
+                        playAnimation(next);
+                    } else {
+                        isPlaying = false;
+                        if (toolbar) toolbar.updatePlayState(false);
+                    }
+                }
+            }
+
+            function toggleAnimation() {
+                if (!currentAction) return;
+                if (isPlaying) {
+                    currentAction.paused = true;
+                    isPlaying = false;
+                } else {
+                    // If finished, restart
+                    if (currentAction.paused === false && currentAction.time >= currentAction.getClip().duration) {
+                        currentAction.reset();
+                    }
+                    currentAction.paused = false;
+                    isPlaying = true;
+                }
+                if (toolbar) toolbar.updatePlayState(isPlaying);
+            }
+
+            function setPlaybackSpeed(speed) {
+                playbackSpeed = speed;
+                if (currentAction) currentAction.timeScale = speed;
+            }
+
+            function getAnimationProgress() {
+                if (!currentAction) return 0;
+                const clip = currentAction.getClip();
+                return clip.duration > 0 ? (currentAction.time / clip.duration) : 0;
+            }
+
+            function seekAnimation(progress) {
+                if (!currentAction) return;
+                const clip = currentAction.getClip();
+                currentAction.time = clip.duration * Math.max(0, Math.min(1, progress));
+                if (!isPlaying) { mixer.update(0); render(); }
+            }
+
+            function formatTime(seconds) {
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60);
+                return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            }
+
+            // ----------------------------------------------------------------
+            // Toolbar
+            // ----------------------------------------------------------------
+            function createToolbar() {
+                container.querySelectorAll('.mw-3d-toolbar, .mw-3d-settings-panel, .mw-3d-animation-toolbar').forEach(el => el.remove());
+
+                const tb = {};
+                let settingsOpen = false;
+                let fadeTimer;
+
+                // --- Main toolbar ---
+                const toolbarEl = document.createElement('div');
+                toolbarEl.className = 'mw-3d-toolbar';
+
+                const settingsBtn = document.createElement('button');
+                settingsBtn.className = 'mw-3d-toolbar-btn';
+                settingsBtn.title = 'Settings';
+                settingsBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.611 3.611 0 0112 15.6z"/></svg>';
+
+                const inspectorBtn = document.createElement('button');
+                inspectorBtn.className = 'mw-3d-toolbar-btn';
+                inspectorBtn.title = 'Inspector (Coming soon)';
+                inspectorBtn.disabled = true;
+                inspectorBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>';
+
+                toolbarEl.appendChild(settingsBtn);
+                toolbarEl.appendChild(inspectorBtn);
+
+                // --- Settings panel ---
+                const settingsPanel = document.createElement('div');
+                settingsPanel.className = 'mw-3d-settings-panel';
+                settingsPanel.style.display = 'none';
+
+                function closeSettings() {
+                    settingsOpen = false;
+                    settingsPanel.style.display = 'none';
+                    settingsBtn.classList.remove('mw-3d-toolbar-btn-active');
+                }
+
+                settingsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    settingsOpen = !settingsOpen;
+                    settingsPanel.style.display = settingsOpen ? 'block' : 'none';
+                    settingsBtn.classList.toggle('mw-3d-toolbar-btn-active', settingsOpen);
+                });
+
+                const settingsDefs = [
+                    {
+                        icon: '⛶', label: 'Full-screen mode', action: () => {
+                            if (!document.fullscreenElement) container.requestFullscreen?.();
+                            else document.exitFullscreen?.();
+                        }
+                    },
+                    { icon: '◎', label: 'Focus on selection', action: () => fitScene() },
+                    { icon: '↺', label: 'Reset camera view', action: () => resetCamera() },
+                    {
+                        icon: 'HD', label: 'HD textures', toggle: true, checked: true, action: (c) => {
+                            renderer.setPixelRatio(c ? window.devicePixelRatio : 1);
+                        }
+                    }
+                ];
+
+                settingsDefs.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'mw-3d-settings-item';
+                    const iconEl = document.createElement('span');
+                    iconEl.className = 'mw-3d-settings-icon';
+                    iconEl.textContent = s.icon;
+                    item.appendChild(iconEl);
+
+                    if (s.toggle) {
+                        const lbl = document.createElement('label');
+                        lbl.textContent = s.label;
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.checked = s.checked;
+                        cb.addEventListener('change', (e) => { e.stopPropagation(); s.action(cb.checked); });
+                        cb.addEventListener('click', (e) => e.stopPropagation());
+                        item.appendChild(lbl);
+                        item.appendChild(cb);
+                        // Clicking label shouldn't trigger parent
+                        item.addEventListener('click', (e) => e.stopPropagation());
+                    } else {
+                        const lbl = document.createElement('span');
+                        lbl.textContent = s.label;
+                        item.appendChild(lbl);
+                        item.addEventListener('click', (e) => { e.stopPropagation(); s.action(); });
+                    }
+                    settingsPanel.appendChild(item);
+                });
+
+                container.appendChild(toolbarEl);
+                container.appendChild(settingsPanel);
+
+                // --- Fade logic ---
+                let mouseOverToolbar = false;
+                let mouseOverPanel = false;
+
+                function showToolbar() {
+                    toolbarEl.classList.add('mw-3d-toolbar-visible');
+                    resetFadeTimer();
+                }
+                function hideToolbar() {
+                    if (mouseOverToolbar || mouseOverPanel || settingsOpen) return;
+                    toolbarEl.classList.remove('mw-3d-toolbar-visible');
+                    closeSettings();
+                }
+                function resetFadeTimer() {
+                    clearTimeout(fadeTimer);
+                    fadeTimer = setTimeout(hideToolbar, 3000);
+                }
+
+                toolbarEl.addEventListener('mouseenter', () => { mouseOverToolbar = true; clearTimeout(fadeTimer); });
+                toolbarEl.addEventListener('mouseleave', () => { mouseOverToolbar = false; resetFadeTimer(); });
+                settingsPanel.addEventListener('mouseenter', () => { mouseOverPanel = true; clearTimeout(fadeTimer); });
+                settingsPanel.addEventListener('mouseleave', () => { mouseOverPanel = false; closeSettings(); resetFadeTimer(); });
+
+                // Show toolbar on mouse move over the 3D scene
+                container.addEventListener('mousemove', showToolbar);
+                showToolbar();
+
+                // --- Animation toolbar ---
+                let animToolbar = null;
+                let timeDisplay = null;
+                let playBtn = null;
+                let trackSelect = null;
+                let repeatSingleBtn, repeatAllBtn, playOnceBtn;
+
+                // Progress bar element (above animation toolbar)
+                let progressWrap = null;
+                let progressFill = null;
+
+                if (animations.length > 0) {
+                    // Progress bar on top of animation toolbar
+                    progressWrap = document.createElement('div');
+                    progressWrap.className = 'mw-3d-anim-progress-wrap';
+                    progressFill = document.createElement('div');
+                    progressFill.className = 'mw-3d-anim-progress-fill';
+                    progressWrap.appendChild(progressFill);
+                    progressWrap.addEventListener('click', (e) => {
+                        const rect = progressWrap.getBoundingClientRect();
+                        const pct = (e.clientX - rect.left) / rect.width;
+                        seekAnimation(pct);
+                    });
+
+                    animToolbar = document.createElement('div');
+                    animToolbar.className = 'mw-3d-animation-toolbar';
+
+                    // LEFT GROUP
+                    const leftGroup = document.createElement('div');
+                    leftGroup.className = 'mw-3d-anim-group mw-3d-anim-group-left';
+
+                    playBtn = document.createElement('button');
+                    playBtn.className = 'mw-3d-anim-btn';
+                    playBtn.title = 'Play/Pause';
+                    playBtn.innerHTML = makePauseIcon();
+                    playBtn.addEventListener('click', () => toggleAnimation());
+
+                    timeDisplay = document.createElement('span');
+                    timeDisplay.className = 'mw-3d-anim-time';
+                    timeDisplay.textContent = '00:00 / 00:00';
+
+                    // Speed wrap with speedometer icon
+                    const speedWrap = document.createElement('span');
+                    speedWrap.className = 'mw-3d-anim-speed-wrap';
+                    speedWrap.title = 'Click to change speed';
+                    speedWrap.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-12.5l-5 7h3l-.5 4.5 5-7h-3l.5-4.5z"/></svg>';
+                    const speedText = document.createElement('span');
+                    speedText.className = 'mw-3d-anim-speed';
+                    speedText.textContent = '×' + playbackSpeed;
+                    speedWrap.appendChild(speedText);
+                    speedWrap.addEventListener('click', () => {
+                        speedIndex = (speedIndex + 1) % SPEEDS.length;
+                        playbackSpeed = SPEEDS[speedIndex];
+                        setPlaybackSpeed(playbackSpeed);
+                        speedText.textContent = '×' + playbackSpeed;
+                    });
+
+                    leftGroup.appendChild(playBtn);
+                    leftGroup.appendChild(timeDisplay);
+                    leftGroup.appendChild(speedWrap);
+
+                    // CENTER GROUP
+                    const centerGroup = document.createElement('div');
+                    centerGroup.className = 'mw-3d-anim-group mw-3d-anim-group-center';
+
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'mw-3d-anim-btn';
+                    prevBtn.title = 'Skip to previous animation';
+                    prevBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>';
+                    prevBtn.addEventListener('click', () => {
+                        const idx = (currentTrackIndex - 1 + animations.length) % animations.length;
+                        playAnimation(idx);
+                        if (trackSelect) trackSelect.value = idx;
+                    });
+
+                    trackSelect = document.createElement('select');
+                    trackSelect.className = 'mw-3d-anim-track-select';
+                    animations.forEach((clip, i) => {
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.textContent = clip.name || ('Animation ' + (i + 1));
+                        trackSelect.appendChild(opt);
+                    });
+                    trackSelect.addEventListener('change', () => playAnimation(parseInt(trackSelect.value, 10)));
+
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'mw-3d-anim-btn';
+                    nextBtn.title = 'Skip to next animation';
+                    nextBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
+                    nextBtn.addEventListener('click', () => {
+                        const idx = (currentTrackIndex + 1) % animations.length;
+                        playAnimation(idx);
+                        if (trackSelect) trackSelect.value = idx;
+                    });
+
+                    centerGroup.appendChild(prevBtn);
+                    centerGroup.appendChild(trackSelect);
+                    centerGroup.appendChild(nextBtn);
+
+                    // RIGHT GROUP
+                    const rightGroup = document.createElement('div');
+                    rightGroup.className = 'mw-3d-anim-group mw-3d-anim-group-right';
+
+                    repeatSingleBtn = document.createElement('button');
+                    repeatSingleBtn.className = 'mw-3d-anim-btn' + (repeatMode === 'single' ? ' active' : '');
+                    repeatSingleBtn.title = 'Repeat single animation';
+                    repeatSingleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><text x="12" y="15" text-anchor="middle" font-size="7" fill="currentColor">1</text></svg>';
+
+                    repeatAllBtn = document.createElement('button');
+                    repeatAllBtn.className = 'mw-3d-anim-btn' + (repeatMode === 'all' ? ' active' : '');
+                    repeatAllBtn.title = 'Repeat all animations';
+                    repeatAllBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>';
+
+                    playOnceBtn = document.createElement('button');
+                    playOnceBtn.className = 'mw-3d-anim-btn' + (repeatMode === 'none' ? ' active' : '');
+                    playOnceBtn.title = 'Play all animations once and stop';
+                    playOnceBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>';
+
+                    function setRepeat(mode) {
+                        repeatMode = mode;
+                        repeatSingleBtn.classList.toggle('active', mode === 'single');
+                        repeatAllBtn.classList.toggle('active', mode === 'all');
+                        playOnceBtn.classList.toggle('active', mode === 'none');
+                        if (currentAction) {
+                            if (mode === 'single') currentAction.setLoop(THREE.LoopRepeat, Infinity);
+                            else currentAction.setLoop(THREE.LoopOnce, 1);
+                        }
+                    }
+                    repeatSingleBtn.addEventListener('click', () => setRepeat('single'));
+                    repeatAllBtn.addEventListener('click', () => setRepeat('all'));
+                    playOnceBtn.addEventListener('click', () => setRepeat('none'));
+
+                    rightGroup.appendChild(repeatSingleBtn);
+                    rightGroup.appendChild(repeatAllBtn);
+                    rightGroup.appendChild(playOnceBtn);
+
+                    animToolbar.appendChild(leftGroup);
+                    animToolbar.appendChild(centerGroup);
+                    animToolbar.appendChild(rightGroup);
+
+                    // Progress bar sits on top of animation toolbar
+                    const animWrapper = document.createElement('div');
+                    animWrapper.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:110;';
+                    animWrapper.appendChild(progressWrap);
+                    animWrapper.appendChild(animToolbar);
+                    container.appendChild(animWrapper);
+                    tb._animWrapper = animWrapper;
+                }
+
+                // --- Toolbar API ---
+                tb.updatePlayState = function (playing) {
+                    if (!playBtn) return;
+                    playBtn.innerHTML = playing ? makePauseIcon() : makePlayIcon();
+                };
+
+                tb.updateAnimationProgress = function () {
+                    if (!currentAction) return;
+                    const clip = currentAction.getClip();
+                    const t = currentAction.time;
+                    const total = clip.duration;
+                    if (timeDisplay) timeDisplay.textContent = formatTime(t) + ' / ' + formatTime(total);
+                    if (progressFill) progressFill.style.width = (total > 0 ? (t / total) * 100 : 0) + '%';
+                };
+
+                tb.updateTrackUI = function () {
+                    if (trackSelect) trackSelect.value = currentTrackIndex;
+                };
+
+                tb.destroy = function () {
+                    clearTimeout(fadeTimer);
+                    container.removeEventListener('mousemove', showToolbar);
+                    container.removeEventListener('mouseenter', showToolbar);
+                    container.removeEventListener('mouseleave', hideToolbar);
+                    toolbarEl.remove();
+                    settingsPanel.remove();
+                    if (tb._animWrapper) tb._animWrapper.remove();
+                    else if (animToolbar) animToolbar.remove();
+                };
+
+                return tb;
+            }
+
+            function makePlayIcon() {
+                return '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+            }
+            function makePauseIcon() {
+                return '<svg viewBox="0 0 24 24" width="18" height="18"><rect fill="currentColor" x="6" y="4" width="4" height="16"/><rect fill="currentColor" x="14" y="4" width="4" height="16"/></svg>';
+            }
+
+            // ----------------------------------------------------------------
+            // Sample cube
+            // ----------------------------------------------------------------
+            window.loadSampleCube = function () {
+                initViewer();
+                isGLTF = false;
+
+                // Add lights for non-PBR
+                const dl1 = new THREE.DirectionalLight(0xffffff, 2);
+                dl1.position.set(5, 10, 7);
+                scene.add(dl1);
+                const dl2 = new THREE.DirectionalLight(0x8888ff, 0.8);
+                dl2.position.set(-5, -3, -5);
+                scene.add(dl2);
+
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x4488cc,
+                    metalness: 0.3,
+                    roughness: 0.6
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+
+                centerAndIntro(mesh);
+                toolbar = createToolbar();
+                statusInfo.textContent = 'Sample Cube';
+            };
+
+            // ----------------------------------------------------------------
+            // Drag & Drop
+            // ----------------------------------------------------------------
+            container.addEventListener('dragover', (e) => { e.preventDefault(); dropOverlay.classList.add('active'); });
+            container.addEventListener('dragleave', () => { dropOverlay.classList.remove('active'); });
+            container.addEventListener('drop', (e) => { e.preventDefault(); dropOverlay.classList.remove('active'); if (e.dataTransfer.files.length > 0) loadFile(e.dataTransfer.files[0]); });
+            fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) loadFile(fileInput.files[0]); });
+
+        })();
+    </script>
+</body>
+
+</html>
